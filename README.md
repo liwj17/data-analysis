@@ -165,3 +165,59 @@ Down
 : move cursor down
 Up
 : move cursor up
+#####
+# SciPy Linear Algebra Library
+S1=[]
+S2=[]
+S3=[]
+listcolumn=data1.columns
+for name1 in listcolumn:
+    length=len(data1.columns)
+#A = data1.corr()
+#L = scipy.linalg.cholesky(A, lower=True)
+#U = scipy.linalg.cholesky(A, lower=False)
+    s=[]
+    s1=[]
+    s2=[]
+    for i in range(1000):
+        b=0
+        matrixfinal=np.random.normal(loc=100, scale=1, size=250).reshape(250,1)
+        for name in data1.columns:
+            #a=np.random.normal(loc=data1[name].mean(), scale=data1[name].std(), size=250)
+            a=stock_monte_carlo(data1.loc['2017-09-01'][name],250,data1[name].pct_change(1).mean(),data1[name].pct_change(1).std())
+            b=b+a[0]*C[name]/100
+            matrixfinal=np.hstack((matrixfinal,a.reshape(250,1)))
+        matrixfinal=np.delete(matrixfinal,0,axis=1)
+        data3=pd.DataFrame(matrixfinal)
+#data3=pd.DataFrame(matrixfinal.dot(U/np.abs(U.sum(0))))
+#data3.drop([0],axis=1,inplace=True)
+        data3.columns=data1.columns#获取模拟数据
+        data3['combineindex']=data3.sum(axis=1)
+        yearincomerate=((data3.loc[249]['combineindex']+b)/data3.loc[0]['combineindex'])**(250/data3['combineindex'].count())-1
+        varofincomerate=data3['combineindex'].pct_change(1).std()*np.sqrt(250)#收益波动率
+        sharpratio=(yearincomerate-0.015)/varofincomerate#
+        sharpratio1=(yearincomerate-0.015)/(data3['combineindex'].pct_change(1).cumsum().std()*np.sqrt(250))
+        sharpratio2=(yearincomerate-0.015)/(data3['combineindex'].std()*np.sqrt(250))
+        s.append(sharpratio)
+        s1.append(sharpratio1)
+        s2.append(sharpratio2)
+    S1.append(np.mean(s))
+    S2.append(np.mean(s1))
+    S3.append(np.mean(s2))
+    data1.drop(name1,axis=1,inplace=True)
+#####获取票息数据
+C={}
+for num in c.columns:
+    datalilv1=w.wsd( num, "couponrate2", "2017-09-01","2018-09-01","credibility=1")
+    C[num]=np.mean(datalilv1.Data[0])
+######
+datalilv=w.wsd("011801582.IB", "net_cnbd", "2017-09-01", "2018-09-01", "credibility=1")
+c=pd.DataFrame([datalilv.Times,datalilv.Data[0]]).T
+c.columns=['date','101351029.IB']
+c.index=pd.to_datetime(c.date)
+c.drop(['date'],axis=1,inplace=True)
+####
+import random
+list1=set(data[data['债券等级']=='AAA']['债券代码'])
+#[random.randrange(1000) for i in range(100)]
+list2=random.sample(list1, 120)
